@@ -1,0 +1,45 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Botón para generar un poema aleatorio -->
+    <Button
+        android:id="@+id/btn_generar_poema"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Generar Poema Aleatorio"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Spinner para seleccionar el nombre del poema -->
+    <Spinner
+        android:id="@+id/spinner_poemas"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Botón para mostrar el poema seleccionado del Spinner -->
+    <Button
+        android:id="@+id/btn_mostrar_poema"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Mostrar Poema"
+        android:layout_marginBottom="16dp" />
+
+    <!-- ScrollView para el contenido del poema -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <TextView
+            android:id="@+id/tv_poema"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:padding="8dp"
+            android:text="Aquí se mostrará el poema." />
+    </ScrollView>
+</LinearLayout>
