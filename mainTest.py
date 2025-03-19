@@ -10,8 +10,8 @@ from kivy.uix.button import Button
 from numpy import array, argmax
 from os import environ
 from tensorflow import keras, get_logger
-import tensorflow as tf
 from random import randint
+import tensorflow as tf
 
 environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Desactiva todos los logs de TensorFlow
 get_logger().setLevel('ERROR')  # Desactiva los logs de TensorFlow
