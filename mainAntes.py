@@ -7,8 +7,7 @@ from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.button import Button
-from random import choices
-from time import time
+from random import randint
 
 ANCHO = 10
 ALTO = 20
@@ -22,16 +21,10 @@ class TetrisWidget(Widget):
     def __init__(self, app, **kwargs):
         super(TetrisWidget, self).__init__(**kwargs)
         self.app = app  # Guardar la referencia a la instancia de TetrisApp
-        self.velocidad_base = 0.5  # Velocidad inicial (cada 0.5 segundos)
-        self.velocidad_actual = self.velocidad_base
-        self.nivel_dificultad = 1  # Nivel de dificultad (1-5)
-        self.altura_maxima = 0  # Para medir qué tan lleno está el tablero
-        self.ultimas_piezas = []  # Historial de últimas piezas
-        self.pesos_piezas = [1.0, 1.0, 1.0, 1.0, 1.0]  # Pesos iniciales para cada tipo de pieza
         self.generarPieza()
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
-        Clock.schedule_interval(self.update, self.velocidad_actual)
+        Clock.schedule_interval(self.update, 1.0 / 2.0)  # Actualiza cada 0.5 segundos
 
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
@@ -51,87 +44,36 @@ class TetrisWidget(Widget):
     def update(self, dt):
         self.moverPieza(0, 1)
         self.dibujarTablero()
-        self.actualizar_dificultad()
-
-    def actualizar_dificultad(self):
-        """Ajusta la dificultad del juego según el desempeño del jugador"""
-        global puntaje
-        
-        # Calcular altura máxima de las piezas apiladas
-        self.calcular_altura_maxima()
-        
-        # Factor de dificultad basado en puntaje y altura
-        factor_puntaje = min(puntaje / 1000, 5)  # Máximo 5
-        factor_altura = min(self.altura_maxima / 10, 3)  # Máximo 3
-        
-        # Nivel de dificultad combinado (1-5)
-        self.nivel_dificultad = min(max(1, int(factor_puntaje - factor_altura + 1)), 5)
-        
-        # Ajustar velocidad según nivel de dificultad
-        self.velocidad_actual = max(0.1, self.velocidad_base - (self.nivel_dificultad * 0.08))
-        Clock.unschedule(self.update)
-        Clock.schedule_interval(self.update, self.velocidad_actual)
-        
-        # Ajustar probabilidades de piezas según dificultad
-        self.ajustar_probabilidades_piezas()
-
-    def calcular_altura_maxima(self):
-        """Calcula la altura máxima de las piezas apiladas"""
-        self.altura_maxima = 0
-        for i in range(ALTO):
-            for j in range(ANCHO):
-                if Tablero[i][j] != '.' and ALTO - i > self.altura_maxima:
-                    self.altura_maxima = ALTO - i
-
-    def ajustar_probabilidades_piezas(self):
-        """Ajusta las probabilidades de cada pieza según la dificultad"""
-        # Piezas ordenadas por dificultad percibida (0: más fácil, 4: más difícil)
-        if self.nivel_dificultad <= 2:  # Dificultad baja - más piezas fáciles
-            self.pesos_piezas = [1.5, 1.2, 1.0, 0.8, 0.5]
-        elif self.nivel_dificultad <= 4:  # Dificultad media - balance
-            self.pesos_piezas = [1.0, 1.0, 1.0, 1.0, 1.0]
-        else:  # Dificultad alta - más piezas difíciles
-            self.pesos_piezas = [0.5, 0.8, 1.2, 1.5, 1.2]
-        
-        # Si el tablero está muy lleno, reducir probabilidad de piezas difíciles
-        if self.altura_maxima > 15:
-            self.pesos_piezas = [min(p*1.5, 2.0) for p in self.pesos_piezas]
-            self.pesos_piezas[1] *= 0.7  # Reducir probabilidad de la línea
-            self.pesos_piezas[4] *= 0.7  # Reducir probabilidad de la Z
 
     def generarPieza(self):
         global x, y
-        # Seleccionar tipo de pieza con probabilidades ponderadas
-        tipoPieza = choices([0, 1, 2, 3, 4], weights=self.pesos_piezas, k=1)[0]
-        self.ultimas_piezas.append(tipoPieza)
-        if len(self.ultimas_piezas) > 5:
-            self.ultimas_piezas.pop(0)
+        tipoPieza = randint(0, 4)
 
         for i in range(4):
             for j in range(4):
                 Pieza[i][j] = 0
     
-        if tipoPieza == 0:  # Cuadrado (fácil)
+        if tipoPieza == 0:  # Cuadrado
             Pieza[1][1] = 1
             Pieza[1][2] = 1
             Pieza[2][1] = 1
             Pieza[2][2] = 1
-        elif tipoPieza == 1:  # Linea (media/difícil según situación)
+        elif tipoPieza == 1:  # Linea
             Pieza[0][1] = 1
             Pieza[1][1] = 1
             Pieza[2][1] = 1
             Pieza[3][1] = 1
-        elif tipoPieza == 2:  # L (media)
+        elif tipoPieza == 2:  # L
             Pieza[0][1] = 1
             Pieza[1][1] = 1
             Pieza[2][1] = 1
             Pieza[2][2] = 1
-        elif tipoPieza == 3:  # T (media)
+        elif tipoPieza == 3:  # T
             Pieza[1][0] = 1
             Pieza[1][1] = 1
             Pieza[1][2] = 1
             Pieza[2][1] = 1
-        elif tipoPieza == 4:  # Z (difícil)
+        elif tipoPieza == 4:  # Z
             Pieza[1][0] = 1
             Pieza[1][1] = 1
             Pieza[2][1] = 1
@@ -140,7 +82,6 @@ class TetrisWidget(Widget):
         x = ANCHO // 2 - 2
         y = 0
 
-    # ... (el resto de los métodos se mantienen igual)
     def colisiona(self, nuevoX, nuevoY):
         for i in range(4):
             for j in range(4):
@@ -213,75 +154,21 @@ class TetrisWidget(Widget):
     def dibujarTablero(self):
         self.canvas.clear()
         with self.canvas:
-            # Dibujar fondo del tablero (gris oscuro)
-            Color(0.15, 0.15, 0.15)
-            Rectangle(pos=(0, 0), size=(ANCHO*30, ALTO*30))
-            
-            # Dibujar bordes del tablero (gris claro)
-            Color(0.4, 0.4, 0.4)
-            Rectangle(pos=(0, 0), size=(ANCHO*30, ALTO*30), width=1)
-            
-            # Valores por defecto para verde y azul
-            verde = 0
-            azul = 0
-            
-            # Dibujar todas las celdas
             for i in range(ALTO):
                 for j in range(ANCHO):
-                    # Verificar si es parte de la pieza actual
                     esPartePieza = False
                     for k in range(4):
                         for l in range(4):
                             if Pieza[k][l] == 1 and x + l == j and y + k == i:
                                 esPartePieza = True
-                    
-                    if esPartePieza:
-                        # Pieza actual - Rojo brillante
-                        Color(1, 0.2, 0.2)
-                        Rectangle(pos=(j * 30 + 1, (ALTO - i - 1) * 30 + 1), size=(28, 28))
-                        
-                        # Borde de la pieza actual
-                        Color(1, 0.5, 0.5)
-                        Rectangle(pos=(j * 30, (ALTO - i - 1) * 30), size=(30, 30), width=1)
-                        
-                    elif Tablero[i][j] == '#':
-                        # Calcular altura relativa (0 = abajo, 1 = arriba)
-                        altura_relativa = (ALTO - i) / ALTO
-                        
-                        # Zona de peligro (últimas 5 filas)
-                        if altura_relativa > 0.75:  # 25% superior
-                            # Efecto parpadeante rojo/azul
-                            if int(time() * 2) % 2 == 0:
-                                Color(0.8, 0.2, 0.2)  # Rojo
-                            else:
-                                Color(0.2, 0.2, 0.8)  # Azul
-                        else:
-                            # Transición de color según altura
-                            # Verde (abajo) -> Azul (arriba)
-                            verde = max(0, 1 - (altura_relativa * 1.5))  # Disminuye
-                            azul = min(1, altura_relativa * 1.3)         # Aumenta
-                            
-                            # Ajustar valores entre 0 y 1
-                            verde = max(0.2, min(1, verde))  # Mínimo 0.2 de verde
-                            azul = max(0.2, min(1, azul))    # Mínimo 0.2 de azul
-                            
-                            Color(0, verde, azul)
-                        
-                        # Dibujar bloque
-                        Rectangle(pos=(j * 30 + 1, (ALTO - i - 1) * 30 + 1), size=(28, 28))
-                        
-                        # Borde del bloque (solo si no es zona de peligro)
-                        if altura_relativa <= 0.75:
-                            brillo = min(1, verde + 0.3)
-                            Color(brillo*0.5, brillo, brillo)
-                            Rectangle(pos=(j * 30, (ALTO - i - 1) * 30), size=(30, 30), width=1)
             
-            # Dibujar información de dificultad
-            Color(0.9, 0.9, 0.9)
-            Rectangle(pos=(ANCHO*30 + 10, ALTO*30 - 60), size=(180, 50))
-            Label(text=f"Nivel: {self.nivel_dificultad}\nPiezas: {len(self.ultimas_piezas)}", 
-                pos=(ANCHO*30 + 15, ALTO*30 - 55),
-                font_size='14sp')
+                    if esPartePieza:
+                        Color(1, 0, 0)  # Color rojo para la pieza actual
+                    elif Tablero[i][j] == '#':
+                        Color(0, 1, 0)  # Color verde para las piezas fijadas
+                    else:
+                        Color(1, 1, 1)  # Color blanco para el fondo
+                    Rectangle(pos=(j * 30, (ALTO - i - 1) * 30), size=(30, 30))
 
 class TetrisApp(App):
     def build(self):
@@ -293,8 +180,8 @@ class TetrisApp(App):
         layout.add_widget(self.puntaje_label)
 
         # Crear el widget del juego y añadirlo al layout
-        self.game = TetrisWidget(self)
-        self.game.size_hint = (1, 1)
+        self.game = TetrisWidget(self)  # Pasar la referencia de TetrisApp a TetrisWidget
+        self.game.size_hint = (1, 1)  # Ajustar el tamaño del widget del juego
         layout.add_widget(self.game)
 
         # Crear un BoxLayout horizontal para los botones
@@ -312,16 +199,19 @@ class TetrisApp(App):
         btn_rotar = Button(text="Rotar", size_hint=(None, None), size=(100, 50), pos=(425, 275))
         btn_rotar.bind(on_press=lambda instance: self.game.rotarPieza())
 
+        # Añadir los botones al layout horizontal
         button_layout.add_widget(btn_izquierda)
         button_layout.add_widget(btn_derecha)
         button_layout.add_widget(btn_abajo)
         button_layout.add_widget(btn_rotar)
 
+        # Añadir el layout de botones al layout principal
         layout.add_widget(button_layout)
 
         return layout
 
     def actualizar_puntaje(self, nuevo_puntaje):
+        # Actualizar el texto del Label del puntaje
         self.puntaje_label.text = f"Puntaje: {nuevo_puntaje}"
 
 if __name__ == '__main__':
